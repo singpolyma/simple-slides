@@ -61,8 +61,17 @@ void *xmalloc(size_t s) {
 
 int main(int argc, char *argv[]) {
 	char line[PATH_MAX+10];
+	SDL_Surface *screen;
+	const SDL_VideoInfo* screen_info;
 	struct frame first_frame = blank_frame;
 	struct frame *current_frame = &first_frame;
+
+	/* Initialize SDL */
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
+		fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
+	atexit(SDL_Quit);
 
 	while(fgets(line, PATH_MAX+10, stdin)) {
 		if(line[0] && line[0] != '\n') {
@@ -73,5 +82,33 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	return EXIT_SUCCESS;
+	/* Get screen resolution and initialize window */
+	screen_info = SDL_GetVideoInfo();
+	if(!screen_info) {
+		fprintf(stderr, "SDL_GetVideoInfo: %s\n", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
+
+	if(!(screen = SDL_SetVideoMode(screen_info->current_w, screen_info->current_h, 0, SDL_HWSURFACE))) {
+		fprintf(stderr, "Unable to init SDL screen: %s\n", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
+
+	/* Wait for exit events */
+	while(1) {
+		SDL_Rect rect;
+		SDL_Event event;
+		event.type = 0;
+		if(!SDL_WaitEvent(&event)) {
+			fprintf(stderr, "Unable to get event: %s\n", SDL_GetError());
+			exit(EXIT_FAILURE);
+		}
+		switch(event.type) {
+			case SDL_QUIT:
+				goto mainloopend;
+		}
+	}
+mainloopend:
+
+	exit(EXIT_SUCCESS);
 }
