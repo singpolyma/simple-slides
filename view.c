@@ -25,6 +25,7 @@ const struct frame blank_frame = {NULL,0,NULL,NULL,NULL};
 void load_frame(char *line, struct frame *frame) {
 	char *length, *transition;
 	line[strlen(line)-1] = '\0'; /* chop */
+	frame->length = DEFAULT_FRAME_LENGTH;
 	if((length = strchr(line, ':'))) {
 		*length = '\0';
 		length++;
