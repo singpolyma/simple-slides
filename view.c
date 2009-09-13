@@ -93,10 +93,14 @@ int main(int argc, char *argv[]) {
 		if(line[0] && line[0] != '\n') {
 			load_frame(line, current_frame);
 			current_frame->next = xmalloc(sizeof(*current_frame));
+			*current_frame->next = blank_frame;
 			current_frame->next->prev = current_frame;
 			current_frame = current_frame->next;
 		}
 	}
+
+	/* XXX Inefficient */
+	current_frame->prev->next = NULL;
 
 	/* Get screen resolution and initialize window */
 	screen_info = SDL_GetVideoInfo();
