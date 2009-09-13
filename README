@@ -1,0 +1,19 @@
+The idea here is to make a simple cross-platform, easily deployable, image slideshow system.
+
+The file format will be a tar file containing JPEGs and (eventually) Ogg/Vorbis files.
+
+There will be an IMAGES file, which is an ASCII text file with each line in the following format:
+
+FILENAME:DURATION (in seconds):TRANSITION
+
+With the last two elements being optional.  Duration will have a sane default and trasition defaults to "random transition".
+
+There will also be a MUSIC file, which is an ASCII text file with each line in the following format:
+
+FILENAME:DURATION
+
+With duration being optional and defaulting to the full length of the file.
+
+The viewer application untars the content (probably using a statically-linked libarchive) to a temporary folder, loads the text files, loads the images and sound, and then plays the images in sound, layered over one another, in the appropriate sequence.  The hope is that this will be much better as a file format, and ultimately in any editor UX, than hacking PowerPoint or Windows' Movie Maker to achieve this effect.
+
+I'm currently rather stuck on the static linking of SDL, especially with the cross-compiler for Windows.  The application must ideally be as statically-linked as possible so that a single EXE (or ELF/Mach-O binary) can be distributed along with the presentation (likely via email or USB key), since machines as the target location are unlikely to have the utility or libraries installed, and are unlikely to want to install an application in order to play slideshows.
