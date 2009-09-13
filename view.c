@@ -50,6 +50,22 @@ void load_frame(char *line, struct frame *frame) {
 	}
 }
 
+#define TIMER_EVENT 50
+Uint32 timer_event(Uint32 interval, void *param) {
+	SDL_Event event;
+	SDL_UserEvent userevent;
+
+	userevent.type = SDL_USEREVENT;
+	userevent.code = TIMER_EVENT;
+	userevent.data1 = param;
+	userevent.data2 = NULL;
+	event.type = SDL_USEREVENT;
+	event.user = userevent;
+
+	SDL_PushEvent(&event);
+	return interval;
+}
+
 void *xmalloc(size_t s) {
 	void *p = malloc(s);
 	if(!p) {
@@ -94,6 +110,9 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	/* Fake the first timer event */
+	timer_event(0, &first_frame);
+
 	/* Wait for exit events */
 	while(1) {
 		SDL_Rect rect;
@@ -104,6 +123,41 @@ int main(int argc, char *argv[]) {
 			exit(EXIT_FAILURE);
 		}
 		switch(event.type) {
+			case SDL_USEREVENT:
+				switch(event.user.code) {
+					case TIMER_EVENT:
+						current_frame = event.user.data1;
+						/* This may already be the last slide */
+						if(!current_frame) {
+							goto mainloopend;
+						}
+
+						/* Calculate where to draw the image */
+						rect.x = (screen->w/2)-current_frame->image->w;
+						rect.y = (screen->h/2)-current_frame->image->h;
+						rect.w = current_frame->image->w;
+						rect.h = current_frame->image->h;
+
+						/* Redraw dirtied background */
+						if(SDL_FillRect(screen, &rect, 0) != 0) {
+							fprintf(stderr, "Unable to draw rectangle: %s\n", SDL_GetError());
+							exit(EXIT_FAILURE);
+						}
+
+						/* Draw image */
+						if(SDL_BlitSurface(current_frame->image, NULL, screen, &rect) != 0) {
+							fprintf(stderr, "Unable to blit frame: %s\n", SDL_GetError());
+							exit(EXIT_FAILURE);
+						}
+
+						/* Update dirty rects */
+						SDL_UpdateRects(screen, 1, &rect);
+
+						/* Wait until this slide is done before advancing */
+						SDL_AddTimer(current_frame->length*1000, &timer_event, current_frame->next);
+						break;
+				}
+				break;
 			case SDL_QUIT:
 				goto mainloopend;
 		}
