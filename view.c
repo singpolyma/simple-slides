@@ -43,10 +43,10 @@ void load_frame(char *line, struct frame *frame) {
 		}
 	}
 	frame->image = IMG_Load(line);
-	/*if(!frame->image) {
+	if(!frame->image) {
 		fprintf(stderr, "IMG_Load: %s\n", IMG_GetError());
 		exit(EXIT_FAILURE);
-	}*/
+	}
 }
 
 void *xmalloc(size_t s) {
